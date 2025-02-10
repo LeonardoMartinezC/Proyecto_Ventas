@@ -10,11 +10,9 @@ import pandas as pd
 import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
-from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.seasonal import STL
 import seaborn as sns
 from pandas.plotting import lag_plot
-import json
 
 
 def figura_mapa(datos_abreviados,N): #Function for plottin  the map

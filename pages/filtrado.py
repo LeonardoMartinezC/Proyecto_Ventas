@@ -1,10 +1,6 @@
 import pandas as pd
-import datetime as dt
 import numpy as np
-import matplotlib.pyplot as plt
 # import seaborn as sns
-from pandas.plotting import lag_plot
-from sklearn.metrics import mean_squared_error,r2_score
 from statsmodels.tsa.stattools import adfuller
 import joblib
 
