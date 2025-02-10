@@ -6,6 +6,15 @@ import pandas as pd
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pandas as pd
+import datetime as dt
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.seasonal import STL
+import seaborn as sns
+from pandas.plotting import lag_plot
+import json
 
 
 def figura_mapa(datos_abreviados,N): #Function for plottin  the map
@@ -100,18 +109,22 @@ def figura_categoria_segmento(datos,NUM = None):
 # -----------------------------------------------------------------------
 # Analisis de Clientes
 # -----------------------------------------------------------------------
-def figura_mapa_ventas(datos_abreviados):
+def figura_mapa_ventas(datos_abreviados, limite = 'Todos los Estados'):
     df = pd.DataFrame(datos_abreviados)
-    # fig = px.choropleth(locations=["CA", "TX", "NY"], locationmode="USA-states", color=[1,2,3], scope="usa")
-    lista_numero = [i for i in range(len(datos_abreviados['abreviatura']))]
+    if(limite == 'Todos los Estados'):
+        print('No se Filtro nada')
+    else:
+        limite = float(limite)
+        df  = df[df['Ventas'] > limite]
+
     fig = px.choropleth(
                     df,
-                    locations=datos_abreviados['abreviatura'],
+                    locations=df['abreviatura'],
                     locationmode="USA-states", 
                     color='Ventas', 
                     scope="usa",
                     hover_data='Ventas',
-                    hover_name= datos_abreviados['Estado'],
+                    hover_name= df['Estado'],
                     color_continuous_scale=[
                                     (0.0, "rgb(255, 245, 240)"),  # Blanco
                                     (0.5, "rgb(254, 178, 76)"),   # Naranja
@@ -458,3 +471,87 @@ def figura_matriz_correlacion(r):
     # plt.figure(figsize=(1,1))
     plt.title("Matriz de Correlación")
     return plt
+
+
+# ----------------------------------------------------------------
+# Modelo Arima y analisis de Series de Tiempo
+# ----------------------------------------------------------------
+
+def figura_series_tiempo(datos,datos_diff):
+    fig1, ax = plt.subplots(figsize=(20, 7))
+    sns.lineplot(data = datos,y = 'Profit', x= 'Fecha', linewidth= .5)
+    # plt.show()
+
+
+    fig2, ax = plt.subplots(figsize=(20, 7))
+    sns.kdeplot(data = datos, x = 'Profit', hue = 'Year', fill = True, alpha = 0.5, linewidth = 0, palette='viridis' )
+    plt.show()
+    lag_plot(datos['Profit'])
+    # plt.show()
+
+
+    fig3, ax = plt.subplots(figsize=(20, 7))
+    sns.lineplot(data = datos_diff,y = 'Profit', x= 'Fecha', linewidth= .5)
+    # plt.show()
+
+    fig4, ax = plt.subplots(figsize=(20, 7))
+    sns.kdeplot(data = datos_diff, x = 'Profit', hue = 'Year', fill = True, alpha = 0.5, linewidth = 0, palette='viridis' )
+    # plt.show()
+
+    plt.rc('figure',figsize = (16,12))
+    plt.rc('font',size = 10)
+    Y = datos_diff['Profit'].fillna(0)
+    stl = STL(Y,period = 12)
+    res = stl.fit()
+    fig5 = res.plot()
+    # plt.show()
+
+    lista = [fig1, fig2, fig3, fig4, fig5]
+    return lista
+
+
+# MAPA POR ESTADO PARA EL FILTRADO DE CADA MAPA 
+
+
+# Graficacion de la Serie de Tiempo
+
+def figura_serie(df_filtrado, df_prediccion=None,limite = None):
+    fig = go.Figure()
+    if(limite == None):
+        pass
+    else:
+        df_filtrado = df_filtrado[-limite:]
+    # Gráfica de la serie temporal real
+    fig.add_trace(go.Scatter(
+        x=df_filtrado.index, 
+        y=df_filtrado['Profit'],
+        mode='lines',
+        name="Datos reales",
+        line=dict(color='royalblue', width=2),
+        hoverinfo='x+y'
+    ))
+
+    # Si hay predicciones, añadirlas a la gráfica
+    if df_prediccion is not None:
+        fig.add_trace(go.Scatter(
+            x=df_prediccion.index,
+            y=df_prediccion['Profit'],
+            mode='lines',
+            name="Predicción",
+            line=dict(color='red', dash='dot', width=2),
+            hoverinfo='x+y'
+        ))
+
+    # Estilizar la gráfica
+    fig.update_layout(
+        title="Serie Temporal de Profit",
+        title_font=dict(size=20, family="Arial", color="white"),
+        xaxis=dict(title="Fecha", showgrid=False, tickformat="%Y-%m-%d"),
+        yaxis=dict(title="Profit", showgrid=True, zeroline=False),
+        template="plotly_white",
+        hovermode="x unified",
+        margin=dict(l=40, r=40, t=60, b=40),
+        height=500
+    )
+
+    return fig

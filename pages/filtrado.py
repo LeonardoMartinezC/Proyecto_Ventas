@@ -1,6 +1,13 @@
 import pandas as pd
 import datetime as dt
 import numpy as np
+import matplotlib.pyplot as plt
+# import seaborn as sns
+from pandas.plotting import lag_plot
+from sklearn.metrics import mean_squared_error,r2_score
+from statsmodels.tsa.stattools import adfuller
+import joblib
+
 class Clientes(object):
     def __init__(self, DataFrame_Clientes):
         self.clientes = DataFrame_Clientes
@@ -352,4 +359,92 @@ def filtrado_correlacion(ordenes):
     # plt.savefig('corrTax.png', dpi = 600)
     return r.corr()
 
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
 
+#obtendra el Data-set de Ordenes.csv para ver como es que se comporta las devoluciones
+def obtener_valores(data):
+    # Leer Archivo ordenes.csv
+    data_ordenes = pd.read_csv('BD/ordenes.csv',index_col='Order Date')
+# Ordenar Valores por fechas de Orden
+    data_ordenes.sort_values('Order Date')
+    #Agrupar las que son de la misma fecha y tener el promedio
+    data_ordenes = data_ordenes.groupby(data_ordenes.index)['Profit'].mean().reset_index()
+    # data_ordenes =data_ordenes['Profit']
+    # print(data_ordenes)
+
+
+
+    #Volvemos a ordenar
+    df = data_ordenes.sort_values('Order Date')
+    # Filtramos los valores que son igual a 0
+    df = df[df['Profit'] != 0]
+    # Configuramos el indice para que sean las Fechas de orden
+    df = df.set_index('Order Date')
+
+    # Hacemos tipo datetime las fechas del indice
+    df.index = pd.to_datetime(df.index)
+    #Hacemos que la frecuencia de la serie de tiempo sea igual a Day
+    df = df.asfreq('D')
+
+    # df.index.freq = 'MS'
+    df['Profit'] = df['Profit'].fillna(df['Profit'].mean())
+
+    # Asignamos a las columnas en nombre column
+    df.columns = ['Profit']
+
+
+    ## Para Tener en cuenta que existen los outliers sin que representen un problema para los modelos SARIMAX   
+    # Primero obtenemos la media
+    mean = df['Profit'].mean()
+    # Despues la desviacion estandar 
+    std_dev = df['Profit'].std()
+
+    # Definir límites
+    lower_bound = mean - 3 * std_dev
+    upper_bound = mean + 3 * std_dev
+
+    # Filtrar outliers
+    df_cleaned = df[(df['Profit'] >= lower_bound) & (df['Profit'] <= upper_bound)]
+    df_cleaned.plot(figsize=(20,5))
+    # df.plot(figsize=(20,5),label = True, legend="pp")
+
+    df_cleaned.index = pd.to_datetime(df_cleaned.index)
+    df_cleaned = df_cleaned.asfreq('D')
+    df_cleaned['Profit'] = df_cleaned['Profit'].fillna(df_cleaned['Profit'].mean())
+
+
+    df.columns = ['Profit']
+    return df_cleaned
+def modelo_sarimax(datos,cantidad_dias):
+    if(cantidad_dias<=100 and cantidad_dias != 0):
+        ruta = "pages/Models/SARIMAX.pkl" 
+        modelo_cargado = joblib.load(ruta)
+        start_index = len(datos)
+        end_index = start_index + cantidad_dias 
+        predicciones = modelo_cargado.predict(start=start_index,end=end_index)
+        predicciones = predicciones.iloc[1:]
+        # predicciones_df = pd.DataFrame(predicciones, columns=['Profit'])
+        predicciones_index = pd.date_range(start=datos.index[-1] + pd.Timedelta(days=1), periods=cantidad_dias, freq='D')
+
+        # Convertir las predicciones en un DataFrame y asignar el índice temporal
+        predicciones_df = pd.DataFrame(predicciones.values, index=predicciones_index, columns=['Profit'])
+
+        return predicciones_df
+    else:
+        return None
+def verificar_estacionariedad(serie):
+    resultado = adfuller(serie)
+    print(f"p-valor: {resultado[1]}")
+    if resultado[1] > 0.05:
+        print("La serie no es estacionaria.")
+    else:
+        print("La serie es estacionaria.")
+    # return datos_pred, ax
+# if __name__ == '__main__':
+#     data_ordenes = pd.read_csv('../BD/ordenes.csv')
+#     datos,datos_diff = obtener_valores(data_ordenes)
+#     # verificar_estacionariedad(datos_diff)
+#     modelo_arima(datos_diff)
+    

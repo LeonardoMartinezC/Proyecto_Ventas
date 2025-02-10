@@ -111,7 +111,7 @@ PREDICCIONES
 4. Predicción de ingresos por región o segmento
         Qué podrías predecir: Estimar los ingresos futuros en función de las ventas pasadas y las variables disponibles (región, segmento de cliente, etc.).
         Cómo hacerlo:
-        Usa modelos de series temporales o regresión múltiple para predecir los ingresos futuros por región o segmento de clientes.
+        Usa modelos d e series temporales o regresión múltiple para predecir los ingresos futuros por región o segmento de clientes.
         Ejemplo: "Predicción de los ingresos mensuales por región para los próximos 6 meses".
 5. Predicción de tiempo de entrega
         Qué podrías predecir: Estimar el tiempo de entrega para pedidos según la región y el método de envío.

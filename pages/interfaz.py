@@ -5,8 +5,8 @@ import streamlit as st
 pg = st.navigation([
 
     st.Page("page1.py", title="Exploración"),
-    st.Page("page2.py", title="Visualización", icon=":material/favorite:"),
-    st.Page("page3.py", title="Recomendaciones", icon = "")
+    st.Page("page2.py", title="Modelo De Series de Tiempo", icon=":material/favorite:"),
+    
 ],expanded=True)
 
 
