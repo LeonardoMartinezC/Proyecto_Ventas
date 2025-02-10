@@ -69,4 +69,9 @@ OBJETIVOS
         Matriz de correlación:
         Visualización: Heatmap.
         Objetivo: Analizar relaciones entre ventas, descuentos, cantidad, y rentabilidad.
+
+
+
+# Modelo SARIMAX
+    El código procesa un conjunto de datos de órdenes de compra para preparar una serie de tiempo y entrenar un modelo de predicción. Primero, carga los datos desde un archivo CSV, organiza las fechas y calcula el promedio de ganancias por día. Luego, limpia los datos eliminando valores nulos y atípicos, asegurando que la serie tenga una estructura adecuada para el análisis temporal. Posteriormente, divide los datos en conjuntos de entrenamiento y prueba, analiza patrones estacionales y entrena un modelo SARIMAX para predecir futuras ganancias. Finalmente, el modelo entrenado se guarda para su uso posterior en predicciones.
         
